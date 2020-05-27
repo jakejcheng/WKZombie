@@ -59,7 +59,8 @@ internal class Renderer {
     fileprivate var webView : WKWebView!
     
     
-    init(processPool: WKProcessPool? = nil) {
+    init(processPool: WKProcessPool? = nil, script: String? = nil) {
+        print("**renderer init")
         let doneLoadingWithoutMediaContentScript = "window.webkit.messageHandlers.doneLoading.postMessage(\(Renderer.scrapingCommand));"
         let doneLoadingUserScript = WKUserScript(source: doneLoadingWithoutMediaContentScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
         
@@ -71,7 +72,13 @@ internal class Renderer {
         let contentController = WKUserContentController()
         contentController.addUserScript(doneLoadingUserScript)
         contentController.addUserScript(getElementUserScript)
-
+        
+        if let script = script {
+            print("**script injected")
+            let userScript = WKUserScript(source: script, injectionTime: .atDocumentEnd, forMainFrameOnly: false)
+            contentController.addUserScript(userScript)
+        }
+        
         let config = WKWebViewConfiguration()
         config.processPool = processPool ?? WKProcessPool()
         config.userContentController = contentController
@@ -109,6 +116,7 @@ internal class Renderer {
     
     deinit {
         dispatch_sync_on_main_thread {
+            print("**renderer deinit")
             self.webView.removeFromSuperview()
         }
     }

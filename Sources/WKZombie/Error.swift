@@ -33,6 +33,11 @@ public enum ActionError: ErrorType {
     case parsingFailure
     case transformFailure
     case snapshotFailure
+    case redirectFailure
+    case submitFailure
+    case setAttributeFailure
+    case parseResultFailure
+    case decodeResultFailure
     
     internal struct Static {
         static let DefaultStatusCodeSuccess : Int = 200
@@ -48,6 +53,11 @@ extension ActionError: CustomDebugStringConvertible {
         case .parsingFailure: return "Parsing Failure"
         case .transformFailure: return "Transform Failure"
         case .snapshotFailure: return "Snapshot Failure"
+        case .redirectFailure: return "Redirect Failure"
+        case .submitFailure: return "Submit Failure"
+        case .setAttributeFailure: return "SetAttribute Failure"
+        case .parseResultFailure: return "ParseResult Failure"
+        case .decodeResultFailure: return "DecodeResult Failure"
         }
     }
 }

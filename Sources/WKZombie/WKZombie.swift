@@ -112,9 +112,9 @@ public class WKZombie {
      
      - returns: A WKZombie instance.
      */
-    public init(name: String? = "WKZombie", processPool: WKProcessPool? = nil) {
+    public init(name: String? = "WKZombie", processPool: WKProcessPool? = nil, script: String? = nil) {
         self.name = name
-        self._renderer = Renderer(processPool: processPool)
+        self._renderer = Renderer(processPool: processPool, script: script)
         self._fetcher = ContentFetcher()
     }
     
@@ -126,6 +126,12 @@ public class WKZombie {
         var statusCode : Int = (error == nil) ? ActionError.Static.DefaultStatusCodeSuccess : ActionError.Static.DefaultStatusCodeError
         if let response = response as? HTTPURLResponse {
             statusCode = response.statusCode
+            print("STATUS CODE: \(statusCode)")
+            print("RESPONSE: \(response)")
+        }
+        print("ERROR IF ANY: \(error)")
+        if let data = data {
+            print("DATA: \(data)")
         }
         let errorDomain : ActionError? = (error == nil) ? nil : .networkRequestFailure
         let responseResult: Result<Response> = Result(errorDomain, Response(data: data, statusCode: statusCode))
@@ -145,7 +151,7 @@ public class WKZombie {
                         completion(data >>> decodeResult(response?.url))
                     })
                 } else {
-                    completion(Result.error(.networkRequestFailure))
+                    completion(Result.error(.redirectFailure))
                 }
             }
         }
@@ -238,7 +244,7 @@ public extension WKZombie {
                         completion(data >>> decodeResult(response?.url))
                     })
                 } else {
-                    completion(Result.error(.networkRequestFailure))
+                    completion(Result.error(.submitFailure))
                 }
             }
         }
@@ -356,7 +362,7 @@ public extension WKZombie {
                         completion(decodeResult(nil)(result as? Data))
                     })
                 } else {
-                    completion(Result.error(.networkRequestFailure))
+                    completion(Result.error(.setAttributeFailure))
                 }
             }
         }

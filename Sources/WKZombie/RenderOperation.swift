@@ -42,6 +42,7 @@ internal class RenderOperation : Operation {
     var requestBlock : RequestBlock?
     var authenticationBlock : AuthenticationHandler?
     var postAction: PostAction = .none
+    var id = UUID()
     
     internal fileprivate(set) var result : Data?
     internal fileprivate(set) var response : URLResponse?
@@ -76,9 +77,14 @@ internal class RenderOperation : Operation {
     }
     
     init(webView: WKWebView, timeoutInSeconds : TimeInterval = 30.0) {
+        print("**operation init: \(self.id)")
         self.timeoutInSeconds = timeoutInSeconds
         super.init()
         self.webView = webView
+    }
+    
+    deinit {
+        print("**operation deinit: \(self.id)")
     }
     
     override func start() {
@@ -161,6 +167,10 @@ internal class RenderOperation : Operation {
     fileprivate func setupReferences() {
         dispatch_sync_on_main_thread {
             webView?.configuration.userContentController.add(self, name: "doneLoading")
+            webView?.configuration.userContentController.removeScriptMessageHandler(forName: "error")
+            webView?.configuration.userContentController.add(self, name: "error")
+            webView?.configuration.userContentController.removeScriptMessageHandler(forName: "jsHandler")
+            webView?.configuration.userContentController.add(self, name: "jsHandler")
             webView?.navigationDelegate = self
         }
     }
@@ -190,6 +200,18 @@ extension RenderOperation : WKScriptMessageHandler {
                 }
                 webView.stopLoading()
                 self.webView(webView, didFinish: nil)
+            }
+            if message.name == "jsHandler" {
+//                if let url = webView.url , response == nil {
+//                    response = HTTPURLResponse(url: url, statusCode: 200, httpVersion: nil, headerFields: nil)
+//                }
+//                webView.stopLoading()
+//                self.webView(webView, didFinish: nil)
+                print("jsHandler: \(message.body)")
+            }
+            if message.name == "error" {
+                let error = (message.body as? [String: Any])?["message"] as? String ?? "unknown"
+                print("JavaScript error: \(error)")
             }
         }
     }

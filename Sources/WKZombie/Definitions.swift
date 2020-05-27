@@ -215,7 +215,7 @@ public func ===<T>(a: Action<T>, completion: @escaping (Result<T>) -> Void) {
 internal func parseResponse(_ response: Response) -> Result<Data> {
     let successRange = 200..<300
     if !successRange.contains(response.statusCode) {
-        return .error(.networkRequestFailure)
+        return .error(.parseResultFailure)
     }
     return Result(nil, response.data ?? Data())
 }
@@ -230,7 +230,7 @@ internal func resultFromOptional<A>(_ optional: A?, error: ActionError) -> Resul
 
 internal func decodeResult<T: Page>(_ url: URL? = nil) -> (_ data: Data?) -> Result<T> {
     return { (data: Data?) -> Result<T> in
-        return resultFromOptional(T.pageWithData(data, url: url) as? T, error: .networkRequestFailure)
+        return resultFromOptional(T.pageWithData(data, url: url) as? T, error: .decodeResultFailure)
     }
 }
 
