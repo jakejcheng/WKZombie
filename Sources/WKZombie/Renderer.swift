@@ -57,9 +57,9 @@ internal class Renderer {
     }()
     
     fileprivate var webView : WKWebView!
+    fileprivate var messageHandlers: [String:(_ message: WKScriptMessage)->Void]
     
-    
-    init(processPool: WKProcessPool? = nil) {
+    init(processPool: WKProcessPool? = nil, userScripts: [WKUserScript] = [], messageHandlers: [String:(_ message: WKScriptMessage)->Void] = [:]) {
         let doneLoadingWithoutMediaContentScript = "window.webkit.messageHandlers.doneLoading.postMessage(\(Renderer.scrapingCommand));"
         let doneLoadingUserScript = WKUserScript(source: doneLoadingWithoutMediaContentScript, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
         
@@ -71,7 +71,13 @@ internal class Renderer {
         let contentController = WKUserContentController()
         contentController.addUserScript(doneLoadingUserScript)
         contentController.addUserScript(getElementUserScript)
-
+        
+        for userScript in userScripts {
+            contentController.addUserScript(userScript)
+        }
+        
+        self.messageHandlers = messageHandlers
+        
         let config = WKWebViewConfiguration()
         config.processPool = processPool ?? WKProcessPool()
         config.userContentController = contentController
@@ -181,6 +187,7 @@ internal class Renderer {
         }
         operation.requestBlock = requestBlock
         operation.authenticationBlock = authenticationHandler
+        operation.messageHandlers = messageHandlers
         return operation
     }
     

@@ -43,6 +43,8 @@ internal class RenderOperation : Operation {
     var authenticationBlock : AuthenticationHandler?
     var postAction: PostAction = .none
     
+    var messageHandlers: [String:(_ message: WKScriptMessage)->Void] = [:]
+    
     internal fileprivate(set) var result : Data?
     internal fileprivate(set) var response : URLResponse?
     internal fileprivate(set) var error : Error?
@@ -160,6 +162,10 @@ internal class RenderOperation : Operation {
     
     fileprivate func setupReferences() {
         dispatch_sync_on_main_thread {
+            for name in messageHandlers.keys {
+                webView?.configuration.userContentController.removeScriptMessageHandler(forName: name)
+                webView?.configuration.userContentController.add(self, name: name)
+            }
             webView?.configuration.userContentController.add(self, name: "doneLoading")
             webView?.navigationDelegate = self
         }
@@ -190,6 +196,12 @@ extension RenderOperation : WKScriptMessageHandler {
                 }
                 webView.stopLoading()
                 self.webView(webView, didFinish: nil)
+            }
+            
+            for (name, messageHandler) in self.messageHandlers {
+                if message.name == name {
+                    messageHandler(message)
+                }
             }
         }
     }
